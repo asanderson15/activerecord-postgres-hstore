@@ -17,4 +17,12 @@ class Hash
     self
   end
 
+  private
+
+    def escape_hstore(value)
+    value.nil?         ? 'NULL'
+      : value == ""        ? '""'
+      :                      '"%s"' % value.to_s.gsub(/(["\\])/, '\\\\\1')
+    end
+
 end
