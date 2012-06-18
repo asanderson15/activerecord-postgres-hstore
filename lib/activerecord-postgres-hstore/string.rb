@@ -19,16 +19,16 @@ class String
   # Creates a hash from a valid double quoted hstore format, 'cause this is the format
   # that postgresql spits out.
   def from_hstore
-    if string.nil?
+    if self.nil?
       nil
-    elsif String === string
-      Hash[string.scan(HstorePair).map { |k,v|
+    elsif String === self
+      Hash[self.scan(HstorePair).map { |k,v|
         v = v.upcase == 'NULL' ? nil : v.gsub(/^"(.*)"$/,'\1').gsub(/\\(.)/, '\1')
         k = k.gsub(/^"(.*)"$/,'\1').gsub(/\\(.)/, '\1')
         [k,v]
       }]
     else
-      string
+      self
     end
   end
 
