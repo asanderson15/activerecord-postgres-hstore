@@ -19,30 +19,30 @@ class String
   # Creates a hash from a valid double quoted hstore format, 'cause this is the format
   # that postgresql spits out.
   def from_hstore
-    token_pairs = (scan(hstore_pair)).map { |k,v| [k,v =~ /^NULL$/i ? nil : v] }
-    token_pairs = token_pairs.map { |k,v|
-      [k,v].map { |t| 
-        case t
-        when nil
-          t
-        when /^"{(.*)"$/ # A quoted hash
-          $1.gsub(/\\(.)/, '\1').from_hstore
-        when /^"(.*)"$/ # A quoted value
-          $1.gsub(/\\(.)/, '\1')
-        else
-          t.gsub(/\\(.)/, '\1')
-        end
-      }
-    }
-    Hash[ token_pairs ]
+    if string.nil?
+      nil
+    elsif String === string
+      Hash[string.scan(HstorePair).map { |k,v|
+        v = v.upcase == 'NULL' ? nil : v.gsub(/^"(.*)"$/,'\1').gsub(/\\(.)/, '\1')
+        k = k.gsub(/^"(.*)"$/,'\1').gsub(/\\(.)/, '\1')
+        [k,v]
+      }]
+    else
+      string
+    end
   end
 
   private
 
-  def hstore_pair
+  HstorePair = begin
     quoted_string = /"[^"\\]*(?:\\.[^"\\]*)*"/
-    unquoted_string = /[^\s=,][^\s=,\\]*(?:\\.[^\s=,\\]*|=[^,>])*/
-    string = /(#{quoted_string}|#{unquoted_string})/
-    /#{string}\s*=>\s*#{string}/
+    unquoted_string = /(?:\\.|[^\s,])[^\s=,\\]*(?:\\.[^\s=,\\]*|=[^,>])*/
+    /(#{quoted_string}|#{unquoted_string})\s*=>\s*(#{quoted_string}|#{unquoted_string})/
+  end
+
+  def escape_hstore(value)
+      value.nil?         ? 'NULL'
+    : value == ""        ? '""'
+    :                      '"%s"' % value.to_s.gsub(/(["\\])/, '\\\\\1')
   end
 end

@@ -3,22 +3,13 @@ class Hash
   # Generates an hstore string format. This is the format used
   # to insert or update stuff in the database.
   def to_hstore
-    return "" if empty?
-
-    map { |idx, val| 
-      iv = [idx,val].map { |_| 
-        e = _.to_s.gsub(/"/, '\"')
-        if _.nil?
-          'NULL'
-        elsif e =~ /[,\s=>]/ || e.blank?
-          '"%s"' % e
-        else
-          e
-        end
-      }
-
-      "%s=>%s" % iv
-    } * ","
+    if Hash === object
+      object.map { |k,v|
+        "#{escape_hstore(k)}=>#{escape_hstore(v)}"
+      }.join ','
+    else
+      object
+    end
   end
 
   # If the method from_hstore is called in a Hash, it just returns self.
